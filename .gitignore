@@ -1,0 +1,12 @@
+bin/
+*.exe
+*.test
+*.out
+
+.vscode/
+.history/
+.idea/
+
+.env
+
+vendor/
