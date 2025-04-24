@@ -5,12 +5,15 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/yusuffugurlu/go-project/config"
 	"github.com/yusuffugurlu/go-project/config/logger"
+	"github.com/yusuffugurlu/go-project/internal/db"
 	"github.com/yusuffugurlu/go-project/internal/shutdown"
 )
 
 func main() {
 	logger.InitializeLogger()
 	config.InitializeConfig()
+
+	db.Connect()
 
 	port := viper.GetString("APP_PORT")
     if port == "" {
