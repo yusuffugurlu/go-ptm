@@ -1,30 +1,29 @@
 package main
 
 import (
-	"github.com/spf13/viper"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/yusuffugurlu/go-project/config"
 	"github.com/yusuffugurlu/go-project/config/logger"
 	"github.com/yusuffugurlu/go-project/internal/db"
-	"github.com/yusuffugurlu/go-project/internal/shutdown"
+	"github.com/yusuffugurlu/go-project/internal/server"
+
+	echoPrometheus "github.com/globocom/echo-prometheus"
 )
 
 func main() {
 	logger.InitializeLogger()
-	config.InitializeConfig()
 
-	db.Connect()
+	cfg := config.InitializeConfig()
 
-	port := viper.GetString("APP_PORT")
-    if port == "" {
-        port = "8080"
-    }
+	db.Connect(cfg.DatabaseConnectionURL)
 
 	e := echo.New()
-	e.Logger.Fatal(e.Start(":" + port))
 
+	e.Use(middleware.Logger())
+	e.Use(echoPrometheus.MetricsMiddleware())
+	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 
-	shutdown.Handle(func() {
-        logger.Log.Info("Custom shutdown logic executed.")
-    })
+	server.StartGracefully(e, cfg.AppPort)
 }

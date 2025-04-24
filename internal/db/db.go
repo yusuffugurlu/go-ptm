@@ -1,7 +1,6 @@
 package db
 
 import (
-	"github.com/spf13/viper"
 	"github.com/yusuffugurlu/go-project/config/logger"
 	"github.com/yusuffugurlu/go-project/internal/models"
 	"gorm.io/driver/postgres"
@@ -10,10 +9,8 @@ import (
 
 var DB *gorm.DB
 
-func Connect() {
-	dsn := viper.GetString("DATABASE_CONNECTION_URL")
-
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+func Connect(dbConnectionURL string) {
+	db, err := gorm.Open(postgres.Open(dbConnectionURL), &gorm.Config{})
 	if err != nil {
 		logger.Log.Fatal("Failed to connect to database", err)
 	}
