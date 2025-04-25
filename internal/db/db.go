@@ -10,6 +10,8 @@ import (
 var DB *gorm.DB
 
 func Connect(dbConnectionURL string) {
+	println("Connecting to database...")
+	println(dbConnectionURL)
 	db, err := gorm.Open(postgres.Open(dbConnectionURL), &gorm.Config{})
 	if err != nil {
 		logger.Log.Fatal("Failed to connect to database", err)

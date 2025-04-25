@@ -24,6 +24,9 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(echoPrometheus.MetricsMiddleware())
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
+	e.GET("/health", func(c echo.Context) error {
+		return c.String(200, "OK");
+	})
 
 	server.StartGracefully(e, cfg.AppPort)
 }

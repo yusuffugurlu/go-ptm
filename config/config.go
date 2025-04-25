@@ -2,53 +2,35 @@ package config
 
 import (
 	"os"
-	"path/filepath"
 
-	"github.com/spf13/viper"
+	"github.com/joho/godotenv"
 	"github.com/yusuffugurlu/go-project/config/logger"
 )
 
 type Config struct {
-	AppPort               string `mapstructure:"APP_PORT"`
-	AppName               string `mapstructure:"APP_NAME"`
-	DatabaseConnectionURL string `mapstructure:"DATABASE_CONNECTION_URL"`
+	AppPort               string
+	AppName               string
+	DatabaseConnectionURL string
 }
 
 func InitializeConfig() *Config {
-	projectRoot, err := os.Getwd()
+	err := godotenv.Load()
 	if err != nil {
-		logger.Log.Warnf("Could not get working directory: %v. Assuming './'", err)
-		projectRoot = "."
+		logger.Log.Warn("No .env file found or error loading .env, relying on actual environment variables")
 	}
 
-	envFilePath := filepath.Join(projectRoot, ".env")
-
-	viper.SetConfigFile(envFilePath)
-
-	err = viper.ReadInConfig()
-
-	if err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			logger.Log.Warnf("Config file not found at %s; relying on environment variables or defaults", envFilePath)
-		} else {
-			logger.Log.Errorf("Error reading config file '%s': %v", envFilePath, err)
-		}
-	}
-
-	viper.AutomaticEnv()
-
-	var config Config
-	err = viper.Unmarshal(&config)
-	if err != nil {
-		logger.Log.Errorf("Unable to decode config into struct: %v", err)
+	config := &Config{
+		AppPort:               os.Getenv("APP_PORT"),
+		AppName:               os.Getenv("APP_NAME"),
+		DatabaseConnectionURL: os.Getenv("DATABASE_CONNECTION_URL"),
 	}
 
 	if config.AppPort == "" {
-		logger.Log.Warn("APP_PORT not found in config or environment, defaulting to 8080")
+		logger.Log.Warn("APP_PORT not set, defaulting to 8080")
 		config.AppPort = "8080"
 	}
 
-	logger.Log.Info("Config initialized successfully")
+	logger.Log.Info("Config initialized using os.Getenv and godotenv")
 
-	return &config
+	return config
 }
