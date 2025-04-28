@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     env_file:
-      - .env
+    - .env
     container_name: go-ptm
     ports:
       - "8080:8080"
@@ -26,7 +26,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: go-ptm
+      POSTGRES_DB: go-ptm-db
     ports:
       - "5432:5432"
     # volumes:
@@ -41,30 +41,30 @@ services:
     networks:
       - monitoring
 
-  prometheus:
-      image: prom/prometheus
-      ports:
-        - "9090:9090"
-      volumes:
-         - ./build/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      #   - ./Devops/grafana-prometheus/prometheus/rules.yml:/etc/prometheus/rules.yml
-      restart: always
-      networks:
-        - monitoring
+  # prometheus:
+  #     image: prom/prometheus
+  #     ports:
+  #       - "9090:9090"
+  #     volumes:
+  #        - ./build/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  #     #   - ./Devops/grafana-prometheus/prometheus/rules.yml:/etc/prometheus/rules.yml
+  #     restart: always
+  #     networks:
+  #       - monitoring
 
-  grafana:
-      image: grafana/grafana
-      ports:
-        - "3000:3000"
-      depends_on:
-        - prometheus
-      volumes:
-      - ./build/grafana/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
-      - ./build/grafana/dashboards:/var/lib/grafana/dashboards
-      - ./build/grafana/dashboard.yml:/etc/grafana/provisioning/dashboards/main.yaml
-      restart: always
-      networks:
-        - monitoring
+  # grafana:
+  #     image: grafana/grafana
+  #     ports:
+  #       - "3000:3000"
+  #     depends_on:
+  #       - prometheus
+  #     volumes:
+  #     - ./build/grafana/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
+  #     - ./build/grafana/dashboards:/var/lib/grafana/dashboards
+  #     - ./build/grafana/dashboard.yml:/etc/grafana/provisioning/dashboards/main.yaml
+  #     restart: always
+  #     networks:
+  #       - monitoring
 
 networks:
   monitoring:

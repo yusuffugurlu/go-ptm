@@ -11,12 +11,13 @@ import (
 	"github.com/yusuffugurlu/go-project/config/logger"
 )
 
-func StartGracefully(e *echo.Echo, port string) {
+
+func StartServer(e *echo.Echo) {
 	go func() {
-		logger.Log.Infof("Starting server on port %s", port)
-		if err := e.Start(":" + port); err != nil {
+		logger.Log.Infof("Starting server on port %s", os.Getenv("APP_PORT"))
+		if err := e.Start(os.Getenv("APP_PORT")); err != nil {
 			if err.Error() != "http: Server closed" {
-				logger.Log.Errorf("Error starting server: %v", err)
+				logger.Log.Info("Error starting server: %s", err)
 			}
 		}
 	}()
@@ -27,7 +28,7 @@ func StartGracefully(e *echo.Echo, port string) {
 	<-quit
 	logger.Log.Info("Shutdown signal received, initiating graceful shutdown...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Second)
 	defer cancel()
 
 	logger.Log.Info("Attempting to shut down the server gracefully...")
