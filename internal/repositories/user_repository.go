@@ -1,12 +1,12 @@
 package repositories
 
 import (
+	"gorm.io/gorm"
 	"errors"
 	"fmt"
 
 	"github.com/yusuffugurlu/go-project/internal/models"
 	appErrors "github.com/yusuffugurlu/go-project/pkg/errors"
-	"gorm.io/gorm"
 )
 
 type UserRepository interface {

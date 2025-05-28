@@ -7,8 +7,8 @@ import (
 	"github.com/yusuffugurlu/go-project/internal/dtos"
 	"github.com/yusuffugurlu/go-project/internal/models"
 	"github.com/yusuffugurlu/go-project/internal/repositories"
-	appErrors "github.com/yusuffugurlu/go-project/pkg/errors"
 	"gorm.io/gorm"
+	appErrors "github.com/yusuffugurlu/go-project/pkg/errors"
 )
 
 type UserService interface {
@@ -21,10 +21,14 @@ type UserService interface {
 
 type userService struct {
 	userRepo repositories.UserRepository
+	logService AuditLogService
 }
 
-func NewUserService(userRepository repositories.UserRepository) UserService {
-	return &userService{userRepo: userRepository}
+func NewUserService(userRepository repositories.UserRepository, logService AuditLogService) UserService {
+	return &userService{
+		userRepo: userRepository,
+		logService: logService,
+	}
 }
 
 func (u *userService) CreateUser(user *models.User) (*models.User, error) {
@@ -43,6 +47,10 @@ func (u *userService) CreateUser(user *models.User) (*models.User, error) {
 		return nil, err
 	}
 
+	if err := u.logService.CreateAuditLog(int(user.ID), "user", "create", fmt.Sprintf("user %d created", user.ID)); err != nil {
+		return nil, err
+	}
+
 	return user, nil
 }
 
@@ -54,6 +62,10 @@ func (u *userService) DeleteUser(userId int) error {
 
 	if err := u.userRepo.Delete(userId); err != nil {
 		return appErrors.NewDatabaseError(err, fmt.Sprintf("Failed to delete user with ID %d", userId))
+	}
+
+	if err := u.logService.CreateAuditLog(userId, "user", "delete", fmt.Sprintf("user %d deleted", userId)); err != nil {
+		return appErrors.NewInternalServerError(err)
 	}
 
 	return nil
@@ -107,7 +119,11 @@ func (u *userService) UpdateUser(id int, userData *dtos.UpdateUserRequest) (*mod
 	}
 
 	if err := u.userRepo.Update(existingUser); err != nil {
-		return nil, appErrors.NewDatabaseError(err, fmt.Sprintf("Failed to update user with ID %d", id))
+		return nil, err
+	}
+
+	if err := u.logService.CreateAuditLog(id, "user", "update", fmt.Sprintf("user %d updated", id)); err != nil {
+		return nil, err
 	}
 
 	return existingUser, nil

@@ -10,8 +10,9 @@ import (
 )
 
 func RegisterUserRoutes(e *echo.Group) {
+	logService := services.NewAuditLogService(repositories.NewAuditLogRepository(database.Db))
 	repo := repositories.NewUserRepository(database.Db)
-	service := services.NewUserService(repo)
+	service := services.NewUserService(repo, logService)
 	controller := controllers.NewUserController(service)
 
 	route := e.Group("/users")

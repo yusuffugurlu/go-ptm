@@ -20,7 +20,5 @@ func main() {
 
 	routes.InitRoutes(e)
 
-	server.RegisterMiddlewares(e)
 	server.StartServer(e)
 }
-
