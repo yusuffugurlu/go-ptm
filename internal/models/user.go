@@ -8,7 +8,7 @@ import (
 
 type User struct {
 	ID           uint   `gorm:"primaryKey"`
-	Username     string `gorm:"uniqueIndex; not null"`
+	Username     string `gorm:"not null"`
 	Email        string `gorm:"uniqueIndex; not null"`
 	PasswordHash string `gorm:"not null"`
 	Role         string
@@ -24,6 +24,11 @@ func (u *User) HashPassword() error {
 
 	u.PasswordHash = string(bytes)
 	return nil
+}
+
+func (u *User) CheckPassword(password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password))
+	return err == nil
 }
 
 

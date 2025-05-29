@@ -12,9 +12,9 @@ func InitializeLogger() {
 	config.EncoderConfig.TimeKey = "timestamp"
 	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 
-	config.DisableStacktrace = true
+	//config.DisableStacktrace = true
 
-	config.Level = zap.NewAtomicLevelAt(zap.ErrorLevel)
+	//config.Level = zap.NewAtomicLevelAt(zap.ErrorLevel)
 
 	logger, err := config.Build()
 	if err != nil {

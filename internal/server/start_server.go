@@ -26,7 +26,7 @@ func StartServer(e *echo.Echo) {
 		logger.Log.Infof("Starting server on port %s", os.Getenv("APP_PORT"))
 		if err := e.Start(os.Getenv("APP_PORT")); err != nil {
 			if err.Error() != "http: Server closed" {
-				logger.Log.Info("Error starting server: %s", err)
+				logger.Log.Info("Error starting server: ", err)
 			}
 		}
 	}()

@@ -4,6 +4,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/yusuffugurlu/go-project/config"
 	"github.com/yusuffugurlu/go-project/config/logger"
+
 	"github.com/yusuffugurlu/go-project/internal/database"
 	"github.com/yusuffugurlu/go-project/internal/routes"
 	"github.com/yusuffugurlu/go-project/internal/server"
@@ -19,6 +20,5 @@ func main() {
 	database.InitializeDb()
 
 	routes.InitRoutes(e)
-
 	server.StartServer(e)
 }

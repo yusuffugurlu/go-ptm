@@ -14,6 +14,7 @@ import (
 type UserService interface {
 	GetAllUsers() ([]models.User, error)
 	GetUserById(id int) (*models.User, error)
+	GetUserByEmail(email string) (*models.User, error)
 	CreateUser(user *models.User) (*models.User, error)
 	UpdateUser(id int, user *dtos.UpdateUserRequest) (*models.User, error)
 	DeleteUser(userId int) error
@@ -61,11 +62,11 @@ func (u *userService) DeleteUser(userId int) error {
 	}
 
 	if err := u.userRepo.Delete(userId); err != nil {
-		return appErrors.NewDatabaseError(err, fmt.Sprintf("Failed to delete user with ID %d", userId))
+		return err
 	}
 
 	if err := u.logService.CreateAuditLog(userId, "user", "delete", fmt.Sprintf("user %d deleted", userId)); err != nil {
-		return appErrors.NewInternalServerError(err)
+		return err
 	}
 
 	return nil
@@ -74,10 +75,18 @@ func (u *userService) DeleteUser(userId int) error {
 func (u *userService) GetAllUsers() ([]models.User, error) {
 	users, err := u.userRepo.GetAll()
 	if err != nil {
-		return nil, appErrors.NewDatabaseError(err, "Failed to fetch all users")
+		return nil, err
 	}
 
 	return users, nil
+}
+
+func (u *userService) GetUserByEmail(email string) (*models.User, error) {
+	user, err := u.userRepo.GetByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 func (u *userService) GetUserById(id int) (*models.User, error) {
