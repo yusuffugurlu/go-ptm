@@ -5,14 +5,13 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
-	"github.com/labstack/echo/v4"
 )
 
 type UserClaims struct {
-	Id int    `json:"user_id"`
-	Email  string `json:"email"`
-	Role   string `json:"role"`
-	Exp    int64  `json:"exp"`
+	Id    int    `json:"user_id"`
+	Email string `json:"email"`
+	Role  string `json:"role"`
+	Exp   int64  `json:"exp"`
 }
 
 func GenerateJWT(id int, email string, role string) (string, error) {
@@ -52,15 +51,18 @@ func ValidateJWT(tokenString string, secretKey string) (*jwt.Token, error) {
 	return token, nil
 }
 
-func GetUser(c echo.Context) *UserClaims {
-	user := c.Get("user").(*jwt.Token)
+func GetUserClaims(token *jwt.Token) (*UserClaims, error) {
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, jwt.NewValidationError("invalid token claims", jwt.ValidationErrorMalformed)
+	}
 
-	claims := user.Claims.(jwt.MapClaims)
-
-	return &UserClaims{
+	userClaims := &UserClaims{
 		Id:    int(claims["user_id"].(float64)),
 		Email: claims["email"].(string),
 		Role:  claims["role"].(string),
 		Exp:   int64(claims["exp"].(float64)),
-	} 
+	}
+
+	return userClaims, nil
 }
