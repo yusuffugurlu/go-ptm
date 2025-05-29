@@ -27,10 +27,10 @@ func (a *authService) Login(email string, password string) (string, error) {
 	}
 
 	if user.CheckPassword(password) {
-		return "", appErrors.NewUnauthorized(nil, "Invalid email or password")
+		return "", appErrors.NewUnauthorized(nil, "invalid email or password")
 	}
 
-	token, err := jwt.GenerateJWT(int(user.ID), user.Email, user.Role)
+	token, err := jwt.GenerateJWT(int(user.Id), user.Email, user.Role)
 	if err != nil {
 		return "", err
 	}
@@ -39,11 +39,7 @@ func (a *authService) Login(email string, password string) (string, error) {
 }
 
 func (a *authService) Register(username string, email string, password string) (*models.User, error) {
-	if _, err := a.userService.GetUserByEmail(email); err == nil {
-		return nil, appErrors.NewConflict(nil, "Email is already in use")
-	}
-
-	user, err := models.NewUser(email, username, password, "User")
+	user, err := models.NewUser(username, email, password, "User")
 	if err != nil {
 		return nil, appErrors.NewInternalServerError(err)
 	}

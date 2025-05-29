@@ -17,6 +17,8 @@ func RegisterUserRoutes(e *echo.Group) {
 
 	route := e.Group("/users")
 
+	//route.Use(middleware.RoleBasedAuth("admin"))
+
 	route.GET("/", controller.GetAllUsers)
 	route.GET("/:id", controller.GetUserById)
 	route.POST("/create", controller.CreateUser)

@@ -10,3 +10,5 @@ bin/
 .env
 
 vendor/
+
+postgres-data/

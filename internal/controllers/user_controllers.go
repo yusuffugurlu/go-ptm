@@ -41,7 +41,7 @@ func (u *userController) GetAllUsers(e echo.Context) error {
 func (u *userController) GetUserById(e echo.Context) error {
 	userId, err := strconv.Atoi(e.Param("id"))
 	if err != nil {
-		return appErrors.NewBadRequest(err, "Invalid user ID format")
+		return appErrors.NewBadRequest(err, "invalid user id format")
 	}
 
 	user, err := u.userService.GetUserById(userId)
@@ -55,7 +55,7 @@ func (u *userController) GetUserById(e echo.Context) error {
 func (u *userController) UpdateUser(e echo.Context) error {
 	var req dtos.UpdateUserRequest
 	if err := e.Bind(&req); err != nil {
-		return appErrors.NewBadRequest(err, "Invalid request format")
+		return appErrors.NewBadRequest(err, "invalid request format")
 	}
 
 	if err := e.Validate(req); err != nil {
@@ -64,7 +64,7 @@ func (u *userController) UpdateUser(e echo.Context) error {
 
 	userId, err := strconv.Atoi(e.Param("id"))
 	if err != nil {
-		return appErrors.NewBadRequest(err, "Invalid user ID format")
+		return appErrors.NewBadRequest(err, "invalid user id format")
 	}
 
 	updatedUser, err := u.userService.UpdateUser(userId, &req)
@@ -78,7 +78,7 @@ func (u *userController) UpdateUser(e echo.Context) error {
 func (u *userController) DeleteUser(e echo.Context) error {
 	userId, err := strconv.Atoi(e.Param("id"))
 	if err != nil {
-		return appErrors.NewBadRequest(err, "Invalid user ID format")
+		return appErrors.NewBadRequest(err, "invalid user id format")
 	}
 
 	if err := u.userService.DeleteUser(userId); err != nil {
@@ -91,7 +91,7 @@ func (u *userController) DeleteUser(e echo.Context) error {
 func (u *userController) CreateUser(e echo.Context) error {
 	var req dtos.CreateUserRequest
 	if err := e.Bind(&req); err != nil {
-		return appErrors.NewBadRequest(err, "Invalid request format")
+		return appErrors.NewBadRequest(err, "invalid request format")
 	}
 
 	if err := e.Validate(req); err != nil {
