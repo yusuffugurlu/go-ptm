@@ -7,6 +7,7 @@ import (
 	"github.com/yusuffugurlu/go-project/internal/database"
 	"github.com/yusuffugurlu/go-project/internal/repositories"
 	"github.com/yusuffugurlu/go-project/internal/services"
+	"github.com/yusuffugurlu/go-project/pkg/middleware"
 )
 
 func RegisterUserRoutes(e *echo.Group) {
@@ -16,6 +17,8 @@ func RegisterUserRoutes(e *echo.Group) {
 	controller := controllers.NewUserController(service)
 
 	route := e.Group("/users")
+
+	route.Use(middleware.RoleBasedAuth("admin"))
 
 	route.GET("/", controller.GetAllUsers)
 	route.GET("/:id", controller.GetUserById)

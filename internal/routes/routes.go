@@ -10,6 +10,7 @@ func InitRoutes(e *echo.Echo) {
 
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 
+	RegisterLogRoutes(v1)
 	RegisterUserRoutes(v1)
 	RegisterAuthRoutes(v1)
 }

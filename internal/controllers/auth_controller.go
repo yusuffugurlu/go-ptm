@@ -27,7 +27,7 @@ func NewAuthController(authService services.AuthService) AuthController {
 func (a *authController) Login(e echo.Context) error {
 	var req dtos.LoginRequest
 	if err := e.Bind(&req); err != nil {
-		return appErrors.NewBadRequest(err, "Invalid request format")
+		return appErrors.NewBadRequest(err, "invalid request format")
 	}
 
 	if err := e.Validate(req); err != nil {
@@ -43,5 +43,19 @@ func (a *authController) Login(e echo.Context) error {
 }
 
 func (a *authController) Register(e echo.Context) error {
-	panic("unimplemented") // DONT FORGET TO IMPLEMENT THIS CONTROLLER
+	var req dtos.RegisterRequest
+	if err := e.Bind(&req); err != nil {
+		return appErrors.NewBadRequest(err, "invalid request format");
+	}
+
+	if err := e.Validate(req); err != nil {
+		return validator.ProcessValidationErrors(err)
+	}
+
+	user, err := a.authService.Register(req.Username, req.Email, req.Password)
+	if err != nil {
+		return err
+	}
+
+	return response.Success(e, http.StatusOK, user)
 }

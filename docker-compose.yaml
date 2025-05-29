@@ -29,10 +29,10 @@ services:
       POSTGRES_DB: go-ptm-db
     ports:
       - "5432:5432"
-    # volumes:
-    #   - ./postgres-data:/var/lib/postgresql/data
-    #   - ./configs/dbconfig/postgresql.conf:/etc/postgresql/postgresql.conf
-    #   - ./configs/dbconfig/pg_hba.conf:/etc/postgresql/pg_hba.conf
+    volumes:
+       - ./postgres-data:/var/lib/postgresql/data
+       - ./configs/dbconfig/postgresql.conf:/etc/postgresql/postgresql.conf
+       - ./configs/dbconfig/pg_hba.conf:/etc/postgresql/pg_hba.conf
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s

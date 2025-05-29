@@ -35,7 +35,7 @@ func NewUserService(userRepository repositories.UserRepository, logService Audit
 func (u *userService) CreateUser(user *models.User) (*models.User, error) {
 	_, err := u.userRepo.GetByEmail(user.Email)
 	if err == nil {
-		return nil, appErrors.NewConflict(nil, fmt.Sprintf("Email %s is already in use", user.Email))
+		return nil, appErrors.NewConflict(nil, fmt.Sprintf("email %s is already in use", user.Email))
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (u *userService) CreateUser(user *models.User) (*models.User, error) {
 		return nil, err
 	}
 
-	if err := u.logService.CreateAuditLog(int(user.ID), "user", "create", fmt.Sprintf("user %d created", user.ID)); err != nil {
+	if err := u.logService.CreateAuditLog(int(user.Id), "user", "create", fmt.Sprintf("user %d created", user.Id)); err != nil {
 		return nil, err
 	}
 
@@ -106,9 +106,9 @@ func (u *userService) UpdateUser(id int, userData *dtos.UpdateUserRequest) (*mod
 	if userData.Email != "" && userData.Email != existingUser.Email {
 		user, err := u.userRepo.GetByEmail(userData.Email)
 		if err == nil && user != nil {
-			return nil, appErrors.NewConflict(nil, fmt.Sprintf("Email %s is already in use", userData.Email))
+			return nil, appErrors.NewConflict(nil, fmt.Sprintf("email %s is already in use", userData.Email))
 		} else if !errors.Is(err, gorm.ErrRecordNotFound) && !appErrors.IsAppError(err) {
-			return nil, appErrors.NewDatabaseError(err, "Failed to check email uniqueness")
+			return nil, appErrors.NewDatabaseError(err, "failed to check email uniqueness")
 		}
 	}
 
