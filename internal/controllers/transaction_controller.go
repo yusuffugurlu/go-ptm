@@ -1,9 +1,12 @@
 package controllers
 
 import (
+	"net/http"
+
 	"github.com/labstack/echo/v4"
-	"github.com/yusuffugurlu/go-project/internal/dtos"
+	"github.com/yusuffugurlu/go-project/internal/process"
 	appErrors "github.com/yusuffugurlu/go-project/pkg/errors"
+	"github.com/yusuffugurlu/go-project/pkg/response"
 	"github.com/yusuffugurlu/go-project/pkg/validator"
 )
 
@@ -20,7 +23,7 @@ func NewTransactionController() TransactionController {
 }
 
 func (t *transactionController) Deposit(e echo.Context) error {
-	var req dtos.TransactionRequest
+	var req process.Transaction
 	if err := e.Bind(&req); err != nil {
 		return appErrors.NewBadRequest(err, "invalid request format")
 	}
@@ -29,7 +32,13 @@ func (t *transactionController) Deposit(e echo.Context) error {
 		return validator.ProcessValidationErrors(err)
 	}
 
-	
+	process.JobQueue <- process.Transaction{
+		Amount: req.Amount,
+		UserId: req.UserId,
+		Type:   process.DepositTransaction,
+	}
+
+	return response.Success(e, http.StatusOK, req)
 }
 
 func (t *transactionController) Transfer(e echo.Context) error {
