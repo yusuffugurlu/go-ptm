@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type User struct {
@@ -29,6 +30,20 @@ func (u *User) HashPassword() error {
 func (u *User) CheckPassword(password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password))
 	return err == nil
+}
+
+func (u *User) AfterCreate(tx *gorm.DB) (err error) {
+	balance := Balance{
+		UserId:        u.Id,
+		Amount:        0.0,
+		LastUpdatedAt: time.Now(),
+	}
+
+	if err = tx.Create(&balance).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
 
 

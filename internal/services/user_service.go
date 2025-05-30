@@ -7,8 +7,8 @@ import (
 	"github.com/yusuffugurlu/go-project/internal/dtos"
 	"github.com/yusuffugurlu/go-project/internal/models"
 	"github.com/yusuffugurlu/go-project/internal/repositories"
-	"gorm.io/gorm"
 	appErrors "github.com/yusuffugurlu/go-project/pkg/errors"
+	"gorm.io/gorm"
 )
 
 type UserService interface {

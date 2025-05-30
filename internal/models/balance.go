@@ -7,5 +7,5 @@ type Balance struct {
 	Amount        float64
 	LastUpdatedAt time.Time
 
-	User *User `gorm:"foreignKey:UserId;constraint:OnDelete:CASCADE"`
+	User          *User   `gorm:"foreignKey:UserId;references:Id;constraint:OnDelete:CASCADE"`
 }
