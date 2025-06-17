@@ -13,4 +13,5 @@ func InitRoutes(e *echo.Echo) {
 	RegisterLogRoutes(v1)
 	RegisterUserRoutes(v1)
 	RegisterAuthRoutes(v1)
+	RegisterTransactionRoutes(v1)
 }

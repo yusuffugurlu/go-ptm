@@ -6,6 +6,7 @@ import (
 	"github.com/yusuffugurlu/go-project/config/logger"
 
 	"github.com/yusuffugurlu/go-project/internal/database"
+	"github.com/yusuffugurlu/go-project/internal/process"
 	"github.com/yusuffugurlu/go-project/internal/routes"
 	"github.com/yusuffugurlu/go-project/internal/server"
 	"github.com/yusuffugurlu/go-project/pkg/validator"
@@ -18,6 +19,8 @@ func main() {
 	logger.InitializeLogger()
 	config.InitializeConfig()
 	database.InitializeDb()
+
+	process.InitWorkerPool(10)
 
 	routes.InitRoutes(e)
 	server.StartServer(e)
