@@ -6,7 +6,7 @@ import (
 )
 
 func InitRoutes(e *echo.Echo) {
-	v1 := e.Group("/v1")
+	v1 := e.Group("/api/v1")
 
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 

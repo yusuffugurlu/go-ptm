@@ -19,10 +19,10 @@ const (
 )
 
 type Transaction struct {
-	Amount   float32 `json:"amount" validate:"required"`
-	UserId   uint `json:"user_id" validate:"required"`
-	ToUserId uint `json:"to_user_id"`
-	Date	 string  `json:"date"`
+	Amount   float32         `json:"amount" validate:"required"`
+	UserId   uint            `json:"user_id" validate:"required"`
+	ToUserId uint            `json:"to_user_id"`
+	Date     time.Time          `json:"date"`
 	Type     TransactionType `json:"type" validate:"required"`
 }
 
@@ -60,7 +60,7 @@ func (wp *WorkerPool) worker(id int, jobs <-chan Transaction) {
 		case WithdrawTransaction:
 			wp.repo.Withdraw(job.UserId, float64(job.Amount))
 		case TransferTransaction:
-			// wp.repo.Transfer(job.UserId, job.ToUserId, float64(job.Amount))
+			err = wp.repo.Transfer(job.UserId, job.ToUserId, float64(job.Amount))
 		default:
 			err = fmt.Errorf("unknown transaction type: %s", job.Type)
 		}

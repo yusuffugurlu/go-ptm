@@ -15,6 +15,7 @@ type BalancesRepository interface {
 	GetByUserId(userId uint) (*models.Balance, error)
 	Deposit(userId uint, amount float64) error
 	Withdraw(userId uint, amount float64) error
+	Transfer(fromUserId, toUserId uint, amount float64) error
 }
 
 type balancesRepository struct {
@@ -105,6 +106,55 @@ func (b *balancesRepository) Withdraw(userId uint, amount float64) error {
 		if err := tx.Save(&balance).Error; err != nil {
 			return appErrors.NewDatabaseError(err, "failed to update balance after withdrawal")
 		}
+		return nil
+	})
+}
+
+func (b *balancesRepository) Transfer(fromUserId, toUserId uint, amount float64) error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	if amount <= 0 {
+		return appErrors.NewBadRequest(nil, "amount must be positive")
+	}
+
+	if fromUserId == toUserId {
+		return appErrors.NewBadRequest(nil, "cannot transfer to same user")
+	}
+
+	return b.db.Transaction(func(tx *gorm.DB) error {
+		var fromBalance, toBalance models.Balance
+
+		if err := tx.Where("user_id = ?", fromUserId).First(&fromBalance).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return appErrors.NewNotFound(err, fmt.Sprintf("balance not found for user %d", fromUserId))
+			}
+			return appErrors.NewDatabaseError(err, "failed to get sender balance")
+		}
+
+
+		if err := tx.Where("user_id = ?", toUserId).First(&toBalance).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return appErrors.NewNotFound(err, fmt.Sprintf("balance not found for user %d", toUserId))
+			}
+			return appErrors.NewDatabaseError(err, "failed to get receiver balance")
+		}
+
+		if fromBalance.Amount < amount {
+			return appErrors.NewConflict(nil, fmt.Sprintf("insufficient funds for user %d: requested %.2f, available %.2f", fromUserId, amount, fromBalance.Amount))
+		}
+
+		fromBalance.Amount -= amount
+		toBalance.Amount += amount
+
+		if err := tx.Save(&fromBalance).Error; err != nil {
+			return appErrors.NewDatabaseError(err, "failed to update sender balance")
+		}
+
+		if err := tx.Save(&toBalance).Error; err != nil {
+			return appErrors.NewDatabaseError(err, "failed to update receiver balance")
+		}
+
 		return nil
 	})
 }
