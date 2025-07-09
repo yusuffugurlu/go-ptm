@@ -6,6 +6,7 @@ import (
 
 	"github.com/yusuffugurlu/go-project/config/logger"
 	"github.com/yusuffugurlu/go-project/internal/database"
+	"github.com/yusuffugurlu/go-project/internal/models"
 	"github.com/yusuffugurlu/go-project/internal/repositories"
 	appErrors "github.com/yusuffugurlu/go-project/pkg/errors"
 )
@@ -16,13 +17,14 @@ const (
 	DepositTransaction  TransactionType = "deposit"
 	WithdrawTransaction TransactionType = "withdraw"
 	TransferTransaction TransactionType = "transfer"
+	DebitTransaction    TransactionType = "debit"
 )
 
 type Transaction struct {
 	Amount   float32         `json:"amount" validate:"required"`
 	UserId   uint            `json:"user_id" validate:"required"`
 	ToUserId uint            `json:"to_user_id"`
-	Date     time.Time          `json:"date"`
+	Date     time.Time       `json:"date"`
 	Type     TransactionType `json:"type" validate:"required"`
 }
 
@@ -33,13 +35,15 @@ const (
 var JobQueue chan Transaction
 
 type WorkerPool struct {
-	repo repositories.BalancesRepository
+	balanceRepo     repositories.BalancesRepository
+	transactionRepo repositories.TransactionRepository
 }
 
 func InitWorkerPool(numWorkers int) *WorkerPool {
 	JobQueue = make(chan Transaction, maxQueueSize)
 	wp := &WorkerPool{
-		repo: repositories.NewBalancesRepository(database.Db),
+		balanceRepo:     repositories.NewBalancesRepository(database.Db),
+		transactionRepo: repositories.NewTransactionRepository(database.Db),
 	}
 
 	for i := 1; i <= numWorkers; i++ {
@@ -54,13 +58,64 @@ func (wp *WorkerPool) worker(id int, jobs <-chan Transaction) {
 	for job := range jobs {
 		logger.Log.Infof("Worker %d RECEIVED job for UserID %d: Type %s, Amount %.2f", id, job.UserId, job.Type, job.Amount)
 		var err error
+
 		switch job.Type {
 		case DepositTransaction:
-			wp.repo.Deposit(job.UserId, float64(job.Amount))
+			err = wp.balanceRepo.Deposit(job.UserId, float64(job.Amount))
+			if err == nil {
+				transaction := &models.Transaction{
+					FromUserId: nil,
+					ToUserId:   &job.UserId,
+					Amount:     float64(job.Amount),
+					Type:       "deposit",
+					Status:     "completed",
+					CreatedAt:  time.Now(),
+				}
+				wp.transactionRepo.Create(transaction)
+			}
+
 		case WithdrawTransaction:
-			wp.repo.Withdraw(job.UserId, float64(job.Amount))
+			err = wp.balanceRepo.Withdraw(job.UserId, float64(job.Amount))
+			if err == nil {
+				transaction := &models.Transaction{
+					FromUserId: &job.UserId,
+					ToUserId:   nil,
+					Amount:     float64(job.Amount),
+					Type:       "withdraw",
+					Status:     "completed",
+					CreatedAt:  time.Now(),
+				}
+				wp.transactionRepo.Create(transaction)
+			}
+
+		case DebitTransaction:
+			err = wp.balanceRepo.Deposit(job.UserId, float64(job.Amount))
+			if err == nil {
+				transaction := &models.Transaction{
+					FromUserId: nil,
+					ToUserId:   &job.UserId,
+					Amount:     float64(job.Amount),
+					Type:       "debit",
+					Status:     "completed",
+					CreatedAt:  time.Now(),
+				}
+				wp.transactionRepo.Create(transaction)
+			}
+
 		case TransferTransaction:
-			err = wp.repo.Transfer(job.UserId, job.ToUserId, float64(job.Amount))
+			err = wp.balanceRepo.Transfer(job.UserId, job.ToUserId, float64(job.Amount))
+			if err == nil {
+				transaction := &models.Transaction{
+					FromUserId: &job.UserId,
+					ToUserId:   &job.ToUserId,
+					Amount:     float64(job.Amount),
+					Type:       "transfer",
+					Status:     "completed",
+					CreatedAt:  time.Now(),
+				}
+				wp.transactionRepo.Create(transaction)
+			}
+
 		default:
 			err = fmt.Errorf("unknown transaction type: %s", job.Type)
 		}

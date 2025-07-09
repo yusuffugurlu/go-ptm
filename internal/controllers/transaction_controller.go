@@ -49,11 +49,14 @@ func (t *transactionController) Deposit(e echo.Context) error {
 		Amount: req.Amount,
 		UserId: req.UserId,
 		Type:   process.DepositTransaction,
+		Date:   time.Now(),
 	}
 
-	req.Date = time.Now()
-
-	return response.Success(e, http.StatusOK, req)
+	return response.Success(e, http.StatusOK, map[string]interface{}{
+		"message": "deposit job queued successfully",
+		"amount":  req.Amount,
+		"user_id": req.UserId,
+	})
 }
 
 func (t *transactionController) Withdraw(e echo.Context) error {
@@ -70,9 +73,14 @@ func (t *transactionController) Withdraw(e echo.Context) error {
 		Amount: req.Amount,
 		UserId: req.UserId,
 		Type:   process.WithdrawTransaction,
+		Date:   time.Now(),
 	}
 
-	return response.Success(e, http.StatusOK, req)
+	return response.Success(e, http.StatusOK, map[string]interface{}{
+		"message": "withdraw job queued successfully",
+		"amount":  req.Amount,
+		"user_id": req.UserId,
+	})
 }
 
 func (t *transactionController) Transfer(e echo.Context) error {
@@ -90,12 +98,16 @@ func (t *transactionController) Transfer(e echo.Context) error {
 		return appErrors.NewUnauthorized(nil, "invalid user context")
 	}
 
-	if err := t.service.TransferBetweenUsers(uint(userClaims.Id), req.ToUserID, req.Amount); err != nil {
-		return err
+	process.JobQueue <- process.Transaction{
+		Amount:   float32(req.Amount),
+		UserId:   uint(userClaims.Id),
+		ToUserId: req.ToUserID,
+		Type:     process.TransferTransaction,
+		Date:     time.Now(),
 	}
 
 	return response.Success(e, http.StatusOK, map[string]interface{}{
-		"message":    "transfer completed successfully",
+		"message":    "transfer job queued successfully",
 		"amount":     req.Amount,
 		"to_user_id": req.ToUserID,
 	})
@@ -195,12 +207,15 @@ func (t *transactionController) Debit(e echo.Context) error {
 		return appErrors.NewUnauthorized(nil, "invalid user context")
 	}
 
-	if err := t.service.DebitFromUser(uint(userClaims.Id), req.Amount); err != nil {
-		return err
+	process.JobQueue <- process.Transaction{
+		Amount: float32(req.Amount),
+		UserId: uint(userClaims.Id),
+		Type:   process.DebitTransaction,
+		Date:   time.Now(),
 	}
 
 	return response.Success(e, http.StatusOK, map[string]interface{}{
-		"message": "debit completed successfully",
+		"message": "debit job queued successfully",
 		"amount":  req.Amount,
 	})
 }
