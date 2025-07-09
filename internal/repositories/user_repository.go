@@ -1,9 +1,10 @@
 package repositories
 
 import (
-	"gorm.io/gorm"
 	"errors"
 	"fmt"
+
+	"gorm.io/gorm"
 
 	"github.com/yusuffugurlu/go-project/internal/models"
 	appErrors "github.com/yusuffugurlu/go-project/pkg/errors"
@@ -49,7 +50,7 @@ func (u *userRepository) Delete(id int) error {
 func (u *userRepository) GetAll() ([]models.User, error) {
 	var users []models.User
 
-	if err := u.db.Find(&users).Error; err != nil {
+	if err := u.db.Preload("Balance").Find(&users).Error; err != nil {
 		return nil, appErrors.NewDatabaseError(err, "failed to fetch all users")
 	}
 
@@ -69,7 +70,7 @@ func (u *userRepository) GetByEmail(email string) (*models.User, error) {
 
 func (u *userRepository) GetById(id int) (*models.User, error) {
 	var user models.User
-	if err := u.db.First(&user, id).Error; err != nil {
+	if err := u.db.Preload("Balance").First(&user, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, appErrors.NewNotFound(err, fmt.Sprintf("user with id %d not found", id))
 		}

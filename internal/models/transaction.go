@@ -3,9 +3,9 @@ package models
 import "time"
 
 type Transaction struct {
-	Id         uint `gorm:"primaryKey"`
-	FromUserId uint
-	ToUserId   uint
+	Id         uint  `gorm:"primaryKey"`
+	FromUserId *uint `gorm:"default:null"`
+	ToUserId   *uint `gorm:"default:null"`
 	Amount     float64
 	Type       string
 	Status     string

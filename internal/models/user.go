@@ -15,6 +15,8 @@ type User struct {
 	Role         string
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
+
+	Balance *Balance `gorm:"foreignKey:UserId"`
 }
 
 func (u *User) HashPassword() error {
@@ -45,7 +47,6 @@ func (u *User) AfterCreate(tx *gorm.DB) (err error) {
 
 	return nil
 }
-
 
 func NewUser(username, email, password, role string) (*User, error) {
 	user := &User{

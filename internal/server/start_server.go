@@ -7,11 +7,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/labstack/echo/v4"
-	"github.com/yusuffugurlu/go-project/config/logger"
 	echoPrometheus "github.com/globocom/echo-prometheus"
+	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/yusuffugurlu/go-project/config/logger"
 	customMiddleware "github.com/yusuffugurlu/go-project/pkg/middleware"
+	"golang.org/x/time/rate"
 )
 
 
@@ -21,6 +22,7 @@ func StartServer(e *echo.Echo) {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(echoPrometheus.MetricsMiddleware())
+	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(rate.Limit(2))))
 
 	go func() {
 		logger.Log.Infof("Starting server on port %s", os.Getenv("APP_PORT"))
