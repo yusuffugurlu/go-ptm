@@ -10,7 +10,7 @@ func RegisterTransactionRoutes(e *echo.Group) {
 	controller := controllers.NewTransactionController()
 	route := e.Group("/transactions")
 
-	route.POST("/deposit", controller.Deposit)
+	// route.POST("/deposit", controller.Deposit)
 	route.POST("/withdraw", controller.Withdraw)
 
 	route.POST("/debit", controller.Debit, middleware.RoleBasedAuth("user"))
