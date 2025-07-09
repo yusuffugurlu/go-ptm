@@ -87,19 +87,31 @@ func (t *transactionService) GetTransactionHistory(userID uint, limit, offset in
 		}
 
 		if tx.FromUser != nil {
-			txResponse.FromUser = &dtos.UserResponse{
+			fromUserResponse := &dtos.UserResponse{
 				ID:       tx.FromUser.Id,
 				Username: tx.FromUser.Username,
 				Email:    tx.FromUser.Email,
 			}
+			if tx.FromUser.Balance != nil {
+				fromUserResponse.Balance = &dtos.BalanceResponse{
+					Amount: tx.FromUser.Balance.Amount,
+				}
+			}
+			txResponse.FromUser = fromUserResponse
 		}
 
 		if tx.ToUser != nil {
-			txResponse.ToUser = &dtos.UserResponse{
+			toUserResponse := &dtos.UserResponse{
 				ID:       tx.ToUser.Id,
 				Username: tx.ToUser.Username,
 				Email:    tx.ToUser.Email,
 			}
+			if tx.ToUser.Balance != nil {
+				toUserResponse.Balance = &dtos.BalanceResponse{
+					Amount: tx.ToUser.Balance.Amount,
+				}
+			}
+			txResponse.ToUser = toUserResponse
 		}
 
 		response = append(response, txResponse)
@@ -125,19 +137,31 @@ func (t *transactionService) GetTransactionByID(id uint) (*dtos.TransactionRespo
 	}
 
 	if transaction.FromUser != nil {
-		response.FromUser = &dtos.UserResponse{
+		fromUserResponse := &dtos.UserResponse{
 			ID:       transaction.FromUser.Id,
 			Username: transaction.FromUser.Username,
 			Email:    transaction.FromUser.Email,
 		}
+		if transaction.FromUser.Balance != nil {
+			fromUserResponse.Balance = &dtos.BalanceResponse{
+				Amount: transaction.FromUser.Balance.Amount,
+			}
+		}
+		response.FromUser = fromUserResponse
 	}
 
 	if transaction.ToUser != nil {
-		response.ToUser = &dtos.UserResponse{
+		toUserResponse := &dtos.UserResponse{
 			ID:       transaction.ToUser.Id,
 			Username: transaction.ToUser.Username,
 			Email:    transaction.ToUser.Email,
 		}
+		if transaction.ToUser.Balance != nil {
+			toUserResponse.Balance = &dtos.BalanceResponse{
+				Amount: transaction.ToUser.Balance.Amount,
+			}
+		}
+		response.ToUser = toUserResponse
 	}
 
 	return response, nil
@@ -162,19 +186,31 @@ func (t *transactionService) GetAllTransactions(limit, offset int) ([]*dtos.Tran
 		}
 
 		if tx.FromUser != nil {
-			txResponse.FromUser = &dtos.UserResponse{
+			fromUserResponse := &dtos.UserResponse{
 				ID:       tx.FromUser.Id,
 				Username: tx.FromUser.Username,
 				Email:    tx.FromUser.Email,
 			}
+			if tx.FromUser.Balance != nil {
+				fromUserResponse.Balance = &dtos.BalanceResponse{
+					Amount: tx.FromUser.Balance.Amount,
+				}
+			}
+			txResponse.FromUser = fromUserResponse
 		}
 
 		if tx.ToUser != nil {
-			txResponse.ToUser = &dtos.UserResponse{
+			toUserResponse := &dtos.UserResponse{
 				ID:       tx.ToUser.Id,
 				Username: tx.ToUser.Username,
 				Email:    tx.ToUser.Email,
 			}
+			if tx.ToUser.Balance != nil {
+				toUserResponse.Balance = &dtos.BalanceResponse{
+					Amount: tx.ToUser.Balance.Amount,
+				}
+			}
+			txResponse.ToUser = toUserResponse
 		}
 
 		response = append(response, txResponse)

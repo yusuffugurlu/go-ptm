@@ -37,7 +37,7 @@ func (r *transactionRepository) Create(transaction *models.Transaction) error {
 
 func (r *transactionRepository) GetByID(id uint) (*models.Transaction, error) {
 	var transaction models.Transaction
-	if err := r.db.Preload("FromUser").Preload("ToUser").First(&transaction, id).Error; err != nil {
+	if err := r.db.Preload("FromUser.Balance").Preload("ToUser.Balance").First(&transaction, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, appErrors.NewNotFound(err, fmt.Sprintf("transaction with id %d not found", id))
 		}
@@ -49,7 +49,7 @@ func (r *transactionRepository) GetByID(id uint) (*models.Transaction, error) {
 func (r *transactionRepository) GetByUserID(userID uint) ([]*models.Transaction, error) {
 	var transactions []*models.Transaction
 	if err := r.db.Where("from_user_id = ? OR to_user_id = ?", userID, userID).
-		Preload("FromUser").Preload("ToUser").
+		Preload("FromUser.Balance").Preload("ToUser.Balance").
 		Order("created_at DESC").
 		Find(&transactions).Error; err != nil {
 		return nil, appErrors.NewDatabaseError(err, "failed to get user transactions")
@@ -60,7 +60,7 @@ func (r *transactionRepository) GetByUserID(userID uint) ([]*models.Transaction,
 func (r *transactionRepository) GetHistoryByUserID(userID uint, limit, offset int) ([]*models.Transaction, error) {
 	var transactions []*models.Transaction
 	if err := r.db.Where("from_user_id = ? OR to_user_id = ?", userID, userID).
-		Preload("FromUser").Preload("ToUser").
+		Preload("FromUser.Balance").Preload("ToUser.Balance").
 		Order("created_at DESC").
 		Limit(limit).Offset(offset).
 		Find(&transactions).Error; err != nil {
@@ -71,7 +71,7 @@ func (r *transactionRepository) GetHistoryByUserID(userID uint, limit, offset in
 
 func (r *transactionRepository) GetAll(limit, offset int) ([]*models.Transaction, error) {
 	var transactions []*models.Transaction
-	query := r.db.Preload("FromUser").Preload("ToUser").Order("created_at DESC")
+	query := r.db.Preload("FromUser.Balance").Preload("ToUser.Balance").Order("created_at DESC")
 
 	if limit > 0 {
 		query = query.Limit(limit)

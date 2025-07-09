@@ -27,9 +27,14 @@ type TransactionResponse struct {
 }
 
 type UserResponse struct {
-	ID       uint   `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
+	ID       uint             `json:"id"`
+	Username string           `json:"username"`
+	Email    string           `json:"email"`
+	Balance  *BalanceResponse `json:"balance,omitempty"`
+}
+
+type BalanceResponse struct {
+	Amount float64 `json:"amount"`
 }
 
 type ScheduledTransactionRequest struct {
