@@ -16,6 +16,7 @@ type BalancesRepository interface {
 	Deposit(userId uint, amount float64) error
 	Withdraw(userId uint, amount float64) error
 	Transfer(fromUserId, toUserId uint, amount float64) error
+	GetHistoricalBalances(userId uint) ([]models.Balance, error)
 }
 
 type balancesRepository struct {
@@ -132,7 +133,6 @@ func (b *balancesRepository) Transfer(fromUserId, toUserId uint, amount float64)
 			return appErrors.NewDatabaseError(err, "failed to get sender balance")
 		}
 
-
 		if err := tx.Where("user_id = ?", toUserId).First(&toBalance).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return appErrors.NewNotFound(err, fmt.Sprintf("balance not found for user %d", toUserId))
@@ -157,4 +157,16 @@ func (b *balancesRepository) Transfer(fromUserId, toUserId uint, amount float64)
 
 		return nil
 	})
+}
+
+func (b *balancesRepository) GetHistoricalBalances(userId uint) ([]models.Balance, error) {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+
+	var historicalBalances []models.Balance
+	if err := b.db.Where("user_id = ?", userId).Order("date DESC").Find(&historicalBalances).Error; err != nil {
+		return nil, appErrors.NewDatabaseError(err, "failed to fetch historical balances")
+	}
+
+	return historicalBalances, nil
 }

@@ -41,3 +41,8 @@ type ScheduledTransactionRequest struct {
 	Amount float64 `json:"amount" validate:"required"`
 	Date   string  `json:"date" validate:"required"`
 }
+
+type HistoricalBalanceResponse struct {
+	Date   string  `json:"date"`
+	Amount float64 `json:"amount"`
+}

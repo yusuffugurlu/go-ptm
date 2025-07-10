@@ -12,4 +12,5 @@ func RegisterBalanceRoutes(e *echo.Group) {
 	route := e.Group("/balances")
 
 	route.GET("/current", controller.GetCurrentBalance, middleware.RoleBasedAuth("user"))
+	route.GET("/historical", controller.GetHistoricalBalances, middleware.RoleBasedAuth("user"))
 }
