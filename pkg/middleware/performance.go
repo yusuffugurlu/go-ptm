@@ -1,10 +1,11 @@
 package middleware
 
 import (
-    "log"
-    "time"
+	"log"
+	"time"
 
-    "github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4"
+	"github.com/yusuffugurlu/go-project/config/logger"
 )
 
 func PerformanceMetrics(next echo.HandlerFunc) echo.HandlerFunc {
@@ -13,7 +14,7 @@ func PerformanceMetrics(next echo.HandlerFunc) echo.HandlerFunc {
         err := next(c)
         duration := time.Since(start)
 
-        log.Printf("%s %s took %v", c.Request().Method, c.Request().URL.Path, duration)
+        logger.Log.Info("%s %s took %v", c.Request().Method, c.Request().URL.Path, duration)
 
         return err
     }
