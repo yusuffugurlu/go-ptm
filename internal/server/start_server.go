@@ -22,6 +22,7 @@ func StartServer(e *echo.Echo) {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(echoPrometheus.MetricsMiddleware())
+	e.Use(customMiddleware.PerformanceMetrics)
 	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(rate.Limit(2))))
 
 	go func() {
