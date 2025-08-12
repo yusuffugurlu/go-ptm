@@ -12,3 +12,6 @@ bin/
 vendor/
 
 postgres-data/
+
+*.md
+*.sh

@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/yusuffugurlu/go-project/config/logger"
 	"github.com/yusuffugurlu/go-project/pkg/errors"
+	"github.com/yusuffugurlu/go-project/pkg/metrics"
 )
 
 type StandardResponse struct {
@@ -50,6 +51,8 @@ func Error(c echo.Context, err error) error {
 		}
 		logger.Log.Errorf("Unhandled error: %v", err)
 	}
+
+	metrics.IncrementError()
 
 	return c.JSON(statusCode, StandardResponse{
 		Success: false,
