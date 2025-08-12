@@ -8,4 +8,4 @@ datasources:
     isDefault: true
     jsonData:
       isAuthEnabled: false
-      tlsSkipVerify: true,
+      tlsSkipVerify: true
