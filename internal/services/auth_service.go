@@ -4,6 +4,7 @@ import (
 	"github.com/yusuffugurlu/go-project/internal/models"
 	appErrors "github.com/yusuffugurlu/go-project/pkg/errors"
 	"github.com/yusuffugurlu/go-project/pkg/jwt"
+	"github.com/yusuffugurlu/go-project/pkg/metrics"
 )
 
 
@@ -34,6 +35,8 @@ func (a *authService) Login(email string, password string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	metrics.IncrementUserLogin();
 
 	return token, nil
 }
