@@ -35,6 +35,12 @@ func NewTransactionController() TransactionController {
 	}
 }
 
+func NewTransactionControllerWithService(service services.TransactionService) TransactionController {
+	return &transactionController{
+		service: service,
+	}
+}
+
 func (t *transactionController) Deposit(e echo.Context) error {
 	var req process.Transaction
 	if err := e.Bind(&req); err != nil {

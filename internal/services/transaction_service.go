@@ -1,8 +1,12 @@
 package services
 
 import (
+	"context"
+	"fmt"
 	"time"
 
+	"github.com/yusuffugurlu/go-project/config/logger"
+	"github.com/yusuffugurlu/go-project/internal/cache"
 	"github.com/yusuffugurlu/go-project/internal/database"
 	"github.com/yusuffugurlu/go-project/internal/dtos"
 	"github.com/yusuffugurlu/go-project/internal/models"
@@ -22,13 +26,27 @@ type TransactionService interface {
 type transactionService struct {
 	transactionRepo repositories.TransactionRepository
 	balanceRepo     repositories.BalancesRepository
+	cacheService    *cache.CacheService
 }
 
 func NewTransactionService() TransactionService {
 	return &transactionService{
 		transactionRepo: repositories.NewTransactionRepository(database.Db),
 		balanceRepo:     repositories.NewBalancesRepository(database.Db),
+		cacheService:    nil,
 	}
+}
+
+func NewTransactionServiceWithCache(cacheService *cache.CacheService) TransactionService {
+	return &transactionService{
+		transactionRepo: repositories.NewTransactionRepository(database.Db),
+		balanceRepo:     repositories.NewBalancesRepository(database.Db),
+		cacheService:    cacheService,
+	}
+}
+
+func (t *transactionService) SetCacheService(cacheService *cache.CacheService) {
+	t.cacheService = cacheService
 }
 
 func (t *transactionService) CreateTransaction(req dtos.TransactionRequest) (*models.Transaction, error) {
@@ -53,7 +71,16 @@ func (t *transactionService) DebitFromUser(userID uint, amount float64) error {
 		CreatedAt:  time.Now(),
 	}
 
-	return t.transactionRepo.Create(transaction)
+	if err := t.transactionRepo.Create(transaction); err != nil {
+		return err
+	}
+
+	if t.cacheService != nil {
+		ctx := context.Background()
+		t.invalidateUserTransactionCaches(ctx, userID)
+	}
+
+	return nil
 }
 
 func (t *transactionService) TransferBetweenUsers(fromUserID, toUserID uint, amount float64) error {
@@ -65,10 +92,31 @@ func (t *transactionService) TransferBetweenUsers(fromUserID, toUserID uint, amo
 		return appErrors.NewBadRequest(nil, "cannot transfer to same user")
 	}
 
-	return t.transactionRepo.Transfer(fromUserID, toUserID, amount)
+	if err := t.transactionRepo.Transfer(fromUserID, toUserID, amount); err != nil {
+		return err
+	}
+
+	if t.cacheService != nil {
+		ctx := context.Background()
+		t.invalidateUserTransactionCaches(ctx, fromUserID)
+		t.invalidateUserTransactionCaches(ctx, toUserID)
+	}
+
+	return nil
 }
 
 func (t *transactionService) GetTransactionHistory(userID uint, limit, offset int) ([]*dtos.TransactionResponse, error) {
+	if t.cacheService != nil {
+		ctx := context.Background()
+		cacheKey := t.cacheService.GenerateCacheKey("transactions:user", fmt.Sprintf("%d:%d:%d", userID, limit, offset))
+
+		var transactions []*dtos.TransactionResponse
+		if err := t.cacheService.GetJSON(ctx, cacheKey, &transactions); err == nil {
+			logger.Log.Debug("Transaction history retrieved from cache", "userID", userID)
+			return transactions, nil
+		}
+	}
+
 	transactions, err := t.transactionRepo.GetHistoryByUserID(userID, limit, offset)
 	if err != nil {
 		return nil, err
@@ -117,10 +165,29 @@ func (t *transactionService) GetTransactionHistory(userID uint, limit, offset in
 		response = append(response, txResponse)
 	}
 
+	if t.cacheService != nil {
+		ctx := context.Background()
+		cacheKey := t.cacheService.GenerateCacheKey("transactions:user", fmt.Sprintf("%d:%d:%d", userID, limit, offset))
+		if err := t.cacheService.SetJSON(ctx, cacheKey, response, 2*time.Minute); err != nil {
+			logger.Log.Error("Failed to cache transaction history", err)
+		}
+	}
+
 	return response, nil
 }
 
 func (t *transactionService) GetTransactionByID(id uint) (*dtos.TransactionResponse, error) {
+	if t.cacheService != nil {
+		ctx := context.Background()
+		cacheKey := t.cacheService.GenerateCacheKey("transaction", fmt.Sprintf("%d", id))
+
+		var transaction dtos.TransactionResponse
+		if err := t.cacheService.GetJSON(ctx, cacheKey, &transaction); err == nil {
+			logger.Log.Debug("Transaction retrieved from cache", "id", id)
+			return &transaction, nil
+		}
+	}
+
 	transaction, err := t.transactionRepo.GetByID(id)
 	if err != nil {
 		return nil, err
@@ -164,10 +231,29 @@ func (t *transactionService) GetTransactionByID(id uint) (*dtos.TransactionRespo
 		response.ToUser = toUserResponse
 	}
 
+	if t.cacheService != nil {
+		ctx := context.Background()
+		cacheKey := t.cacheService.GenerateCacheKey("transaction", fmt.Sprintf("%d", id))
+		if err := t.cacheService.SetJSON(ctx, cacheKey, response, 5*time.Minute); err != nil {
+			logger.Log.Error("Failed to cache transaction", err)
+		}
+	}
+
 	return response, nil
 }
 
 func (t *transactionService) GetAllTransactions(limit, offset int) ([]*dtos.TransactionResponse, error) {
+	if t.cacheService != nil {
+		ctx := context.Background()
+		cacheKey := t.cacheService.GenerateCacheKey("transactions:all", fmt.Sprintf("%d:%d", limit, offset))
+
+		var transactions []*dtos.TransactionResponse
+		if err := t.cacheService.GetJSON(ctx, cacheKey, &transactions); err == nil {
+			logger.Log.Debug("All transactions retrieved from cache")
+			return transactions, nil
+		}
+	}
+
 	transactions, err := t.transactionRepo.GetAll(limit, offset)
 	if err != nil {
 		return nil, err
@@ -216,5 +302,23 @@ func (t *transactionService) GetAllTransactions(limit, offset int) ([]*dtos.Tran
 		response = append(response, txResponse)
 	}
 
+	if t.cacheService != nil {
+		ctx := context.Background()
+		cacheKey := t.cacheService.GenerateCacheKey("transactions:all", fmt.Sprintf("%d:%d", limit, offset))
+		if err := t.cacheService.SetJSON(ctx, cacheKey, response, 1*time.Minute); err != nil {
+			logger.Log.Error("Failed to cache all transactions", err)
+		}
+	}
+
 	return response, nil
+}
+
+func (t *transactionService) invalidateUserTransactionCaches(ctx context.Context, userID uint) {
+	userTransactionsPattern := fmt.Sprintf("transactions:user:%d:*", userID)
+	t.cacheService.DeletePattern(ctx, userTransactionsPattern)
+
+	allTransactionsPattern := "transactions:all:*"
+	t.cacheService.DeletePattern(ctx, allTransactionsPattern)
+
+	logger.Log.Debug("Transaction caches invalidated for user", "userID", userID)
 }
