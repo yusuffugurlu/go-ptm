@@ -1,14 +1,26 @@
 package routes
 
 import (
+	"time"
+
 	"github.com/labstack/echo/v4"
+	"github.com/yusuffugurlu/go-project/internal/cache"
 	"github.com/yusuffugurlu/go-project/internal/controllers"
+	"github.com/yusuffugurlu/go-project/internal/services"
 	"github.com/yusuffugurlu/go-project/pkg/middleware"
 )
 
-func RegisterTransactionRoutes(e *echo.Group) {
-	controller := controllers.NewTransactionController()
+func RegisterTransactionRoutes(e *echo.Group, cacheService *cache.CacheService) {
+	service := services.NewTransactionServiceWithCache(cacheService)
+	controller := controllers.NewTransactionControllerWithService(service)
 	route := e.Group("/transactions")
+
+	cacheConfig := middleware.CacheConfig{
+		Duration: 2 * time.Minute,
+		KeyFunc:  middleware.CacheByUserID,
+	}
+	cacheMiddleware := middleware.NewCacheMiddleware(cacheService, cacheConfig)
+	route.Use(cacheMiddleware.Cache())
 
 	// route.POST("/deposit", controller.Deposit)
 	route.POST("/withdraw", controller.Withdraw)
