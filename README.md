@@ -49,3 +49,25 @@ The project is organized as follows:
 
 - **Prometheus** and **Grafana** configurations are located in the `build/` directory.
 - Access the monitoring dashboards at `http://localhost:3000`.
+
+## Database replication (primary -> replica)
+
+A simple streaming replication setup is provided using Docker Compose. The compose file creates a primary Postgres service and a replica that performs a base backup and connects as a standby.
+
+How to run:
+
+```bash
+docker-compose up -d
+```
+
+Notes:
+- Primary configuration files are under `configs/dbconfig/primary/`.
+- Replica startup logic is in `scripts/replica-entrypoint.sh`.
+- The replication user is `replicator` with password `repl_password` by default. These can be changed via environment variables in `docker-compose.yaml`.
+
+Testing replication:
+
+1. Connect to the primary (port 5432) and create a test table and insert a row.
+2. Connect to the replica (container `go-ptm-db-replica`) and verify the row appears.
+
+This setup is intended for local development and testing. For production use, follow Postgres best practices for secure credentials, backups, and monitoring.
