@@ -28,7 +28,7 @@ func RoleBasedAuth(requiredRole string) echo.MiddlewareFunc {
 				return appErrors.NewUnauthorized(err, "failed to parse user claims")
 			}
 
-			if userClaims.Role != requiredRole {
+			if strings.ToLower(userClaims.Role) != requiredRole {
 				return appErrors.NewUnauthorized(nil, "insufficient permissions")
 			}
 
