@@ -13,6 +13,7 @@ import (
 	"github.com/yusuffugurlu/go-project/internal/process"
 	"github.com/yusuffugurlu/go-project/internal/routes"
 	"github.com/yusuffugurlu/go-project/internal/server"
+	"github.com/yusuffugurlu/go-project/internal/services"
 	"github.com/yusuffugurlu/go-project/pkg/validator"
 )
 
@@ -45,6 +46,11 @@ func main() {
 	}()
 
 	process.InitWorkerPool(10)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	schedSvc := services.NewScheduledTransactionService()
+	schedSvc.StartScheduler(ctx, 1*time.Minute)
 
 	routes.InitRoutes(e, cacheService)
 	server.StartServer(e)

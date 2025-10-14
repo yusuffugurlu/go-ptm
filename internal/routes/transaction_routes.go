@@ -31,4 +31,8 @@ func RegisterTransactionRoutes(e *echo.Group, cacheService *cache.CacheService) 
 	route.GET("/:id", controller.GetByID, middleware.RoleBasedAuth("user"))
 
 	route.GET("/all", controller.GetAllTransactions, middleware.RoleBasedAuth("admin"))
+
+	// scheduled transactions
+	schedController := controllers.NewScheduledTransactionController()
+	route.POST("/schedule", schedController.Schedule, middleware.RoleBasedAuth("user"))
 }
